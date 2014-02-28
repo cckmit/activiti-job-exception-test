@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:task="http://www.springframework.org/schema/task" xsi:schemaLocation="http://www.springframework.org/schema/beans
+				http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+
+	<bean id="customFailedJobCommandFactory" class="com.ryanberg.activiti.custom.CustomFailedJobCommandFactory"/>
+
+    <task:executor id="threadPoolExecutor" pool-size="2-5" queue-capacity="3" rejection-policy="CALLER_RUNS"/>
+
+    <!--
+        Uncomment this bean to use the custom execute jobs runnable that traps exception and allows other parallel
+        jobs to continue to run
+     -->
+    <!--<bean id="activitiSpringJobExecutor" class="com.ryanberg.activiti.custom.CustomSpringJobExecutor">-->
+        <!--<property name="taskExecutor" ref="threadPoolExecutor"/>-->
+        <!--<property name="waitTimeInMillis" value="1000"/>-->
+        <!--<property name="lockTimeInMillis" value="3600000"/> &lt;!&ndash; one hour &ndash;&gt;-->
+    <!--</bean>-->
+
+    <!-- This bean uses default execute jobs runnable that does not trap exception -->
+    <bean id="activitiSpringJobExecutor" class="org.activiti.spring.components.jobexecutor.SpringJobExecutor">
+        <property name="taskExecutor" ref="threadPoolExecutor"/>
+        <property name="waitTimeInMillis" value="1000"/>
+        <property name="lockTimeInMillis" value="3600000"/> <!-- one hour -->
+    </bean>
+
+    <bean id="processEngineConfiguration" class="org.activiti.engine.impl.cfg.StandaloneInMemProcessEngineConfiguration">
+		<property name="databaseSchemaUpdate" value="true"/>
+		<property name="jobExecutorActivate" value="true"/>
+        <property name="jobExecutor" ref="activitiSpringJobExecutor"/>
+        <property name="failedJobCommandFactory" ref="customFailedJobCommandFactory"/>
+	</bean>
+</beans>
